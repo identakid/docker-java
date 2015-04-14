@@ -1,5 +1,5 @@
 # Pull base image
-FROM identakid/debian:jessie
+FROM identakid/debian:latest
 
 # Install Java, then cleanup
 RUN \
