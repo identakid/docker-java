@@ -1,45 +1,26 @@
 # Pull base image
 FROM identakid/debian:latest
 
-# A few problems with compiling Java from source:
-#  1. Oracle.  Licensing prevents us from redistributing the official JDK.
-#  2. Compiling OpenJDK also requires the JDK to be installed, and it gets
-#       really hairy.
-
-# Install Java, then cleanup
+# add webupd8 repository
 RUN \
-    apt-get update -yy && \
-    apt-get dist-upgrade -yy && \
-    apt-get purge wget -yy && \
-    apt-get clean -yy && \
-    apt-get autoclean -yy && \
-    apt-get autoremove -yy && \
-    rm -rf /usr/share/locale/* && \
-    rm -rf /var/cache/debconf/*-old && \
-    rm -rf /var/lib/apt/lists/* && \
-    rm -rf /usr/share/doc/* && \
-    echo "`cat /etc/issue.net` Docker Image - identakid/java/oracle-jre-8 - `date +'%Y/%m/%d'`" > /etc/motd
-
-#RUN apt-get update && apt-get install -y unzip && rm -rf /var/lib/apt/lists/*
-
-ENV JAVA_VERSION 8u40
-ENV JAVA_DEBIAN_VERSION 8u40-b27-1
-
-# see https://bugs.debian.org/775775
-# and https://github.com/docker-library/java/issues/19#issuecomment-70546872
-ENV CA_CERTIFICATES_JAVA_VERSION 20140324
-
-RUN apt-get update && apt-get install -y openjdk-8-jre-headless="$JAVA_DEBIAN_VERSION" ca-certificates-java="$CA_CERTIFICATES_JAVA_VERSION" && rm -rf /var/lib/apt/lists/*
-
-# see CA_CERTIFICATES_JAVA_VERSION notes above
-RUN /var/lib/dpkg/info/ca-certificates-java.postinst configure
+    echo "===> add webupd8 repository..."  && \
+    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list  && \
+    echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list  && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886  && \
+    apt-get update  && \
+    \
+    \
+    echo "===> install Java"  && \
+    echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections  && \
+    echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections  && \
+    DEBIAN_FRONTEND=noninteractive  apt-get install -y --force-yes oracle-java8-installer oracle-java8-set-default  && \
+    \
+    \
+    echo "===> clean up..."  && \
+    rm -rf /var/cache/oracle-jdk8-installer  && \
+    apt-get clean  && \
+    rm -rf /var/lib/apt/lists/*
 
 
-#ADD []
-#ONBUILD ADD []
-#EXPOSE []
-#VOLUME []
-#ENV SHELL []
-
-ENTRYPOINT ["/bin/bash"]
-#CMD []
+# define default command
+CMD ["java"]
