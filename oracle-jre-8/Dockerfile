@@ -1,26 +1,21 @@
 # Pull base image
 FROM identakid/debian:latest
 
-# add webupd8 repository
-RUN \
-    echo "===> add webupd8 repository..."  && \
-    echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee /etc/apt/sources.list.d/webupd8team-java.list  && \
-    echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" | tee -a /etc/apt/sources.list.d/webupd8team-java.list  && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886  && \
-    apt-get update  && \
-    \
-    \
-    echo "===> install Java"  && \
-    echo debconf shared/accepted-oracle-license-v1-1 select true | debconf-set-selections  && \
-    echo debconf shared/accepted-oracle-license-v1-1 seen true | debconf-set-selections  && \
-    DEBIAN_FRONTEND=noninteractive  apt-get install -y --force-yes oracle-java8-installer oracle-java8-set-default  && \
-    \
-    \
-    echo "===> clean up..."  && \
-    rm -rf /var/cache/oracle-jdk8-installer  && \
-    apt-get clean  && \
-    rm -rf /var/lib/apt/lists/*
+ENV JAVA_VERSION 1.8.0
 
+RUN echo "deb http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" \
+      | tee /etc/apt/sources.list.d/webupd8team-java.list \
+    &&  echo "deb-src http://ppa.launchpad.net/webupd8team/java/ubuntu trusty main" \
+      | tee -a /etc/apt/sources.list.d/webupd8team-java.list \
+    && apt-key adv --keyserver keyserver.ubuntu.com --recv-keys EEA14886 \
+    && echo "oracle-java8-installer shared/accepted-oracle-license-v1-1 select true" \
+        | /usr/bin/debconf-set-selections \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive  apt-get install -y \
+        python-software-properties=0.82.7.1debian1 \
+        oracle-java8-installer=8u31+8u33arm-1~webupd8~1 \
+    && update-alternatives --display java \
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
-# define default command
-CMD ["java"]
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
